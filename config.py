@@ -1,63 +1,48 @@
+import os
 import json
-from os.path import exists
-from os import makedirs, getenv
 from pathlib import Path
+from typing import TypedDict
 
-DEFAULT_SETTINGS = {"ai_api_key": None, "ai_api_url": None}
+DEFAULT_CONFIG: Config = {
+    "ai_api_key": None,
+    "ai_api_url": None,
+    "appdata": "/home/{USER}/.local/share/live-assistant/appdata.json",
+}
 
 
-class Config:
-    """
-    Класс `Config` представляет собой класс, при создании экземпляра которого импортирует настройки из файла конфигурации в виде свойств экземпляра
-
-    Пример получение значения:
-
-    > config = Config()
-    > config.variable
-    'foo'
-    """
-
+class Config(TypedDict):
     ai_api_key: str
     ai_api_url: str
-
-    def __init__(
-        self,
-        path: str | Path = Path(
-            f"/home/{getenv("USER")}/.config/live-assistant/config.json"
-        ),
-    ):
-        """
-        Импортирует данные из файла, если файл не найден он будет создан
-
-        :param path: Путь к файлу конфигурации
-        :type path: str | Path
-        """
-        # Преобразуем путь в экземпляр Path если надо
-        self.path = path
-        if not isinstance(self.path, Path):
-            self.path = Path(self.path)
-
-        # Если это каталог, вызвать ошибку
-        if self.path.is_dir():
-            raise ValueError("Неверный путь к файлу конфигурации")
-
-        # Если такого каталога не существует - создать
-        if not exists(self.path.parent):
-            makedirs(self.path.parent)
-
-        # Если файл не существует - создать
-        if not exists(self.path):
-            with open(self.path, "w") as file:
-                json.dump(DEFAULT_SETTINGS, file)
-
-            self._data = DEFAULT_SETTINGS
-        else:
-            with open(self.path, "r") as file:
-                self._data = json.load(file)
-
-        self.__dict__.update(self._data)
+    appdata_filename: str
 
 
-config = Config()
+def load_config(
+    path: Path | str = Path(
+        f"/home/{os.getenv("USER")}/.config/live-assistant/config.json"
+    ),
+) -> Config:
+    if not isinstance(path, Path):
+        path = Path(path)
 
-__all__ = ("config",)
+    if path.is_dir():
+        raise ValueError("path не может быть директорией")
+
+    if not os.path.exists(path.parent):
+        os.makedirs(path.parent)
+        with open(path, "w") as file:
+            json.dump(DEFAULT_CONFIG, file)
+            data: Config = DEFAULT_CONFIG
+    else:
+        with open(path, "r") as file:
+            data: Config = json.load(file)
+
+    return data
+
+
+config = load_config()
+
+__all__ = (
+    "config",
+    "load_config",
+    "Config",
+)
