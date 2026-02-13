@@ -3,7 +3,7 @@ from os.path import exists
 from os import makedirs, getenv
 from pathlib import Path
 
-DEFAULT_SETTINGS = {"bla": 1111}
+DEFAULT_SETTINGS = {"ai_api_key": None, "ai_api_url": None}
 
 
 class Config:
