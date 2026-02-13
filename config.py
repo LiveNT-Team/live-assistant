@@ -13,7 +13,7 @@ DEFAULT_CONFIG: Config = {
 class Config(TypedDict):
     ai_api_key: str
     ai_api_url: str
-    appdata_filename: str
+    appdata: str
 
 
 def load_config(
@@ -31,10 +31,15 @@ def load_config(
         os.makedirs(path.parent)
         with open(path, "w") as file:
             json.dump(DEFAULT_CONFIG, file)
-            data: Config = DEFAULT_CONFIG
+        data: Config = DEFAULT_CONFIG
     else:
-        with open(path, "r") as file:
-            data: Config = json.load(file)
+        if not os.path.exists(path):
+            with open(path, "w") as file:
+                json.dump(DEFAULT_CONFIG, file)
+            data: Config = DEFAULT_CONFIG
+        else:
+            with open(path, "r") as file:
+                data: Config = json.load(file)
 
     return data
 
